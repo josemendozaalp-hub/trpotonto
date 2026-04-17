@@ -24,10 +24,27 @@ const userSchema = new mongoose.Schema(
         }
     },
     { timestamps: true }
-)
+);
 
 USERSchema.pre('save', async function (next) {
     if (!this.isModified('password')) {
         return next();
     }
-})
+
+    this.password = await bcrypt.hash(this.password, 10);
+    return
+});
+
+userSchema.methods.comparePassword = function comparePassword(rawPassword) {
+    return bcrypt.compare(rawPassword, this.password)
+};
+
+userSchema.methods.toJSON = function toJSON() {
+    const userObject = this.toObject();
+    delete userObject.password;
+    return userObject;
+};
+
+const User = mongoose.model('User', userSchema);
+
+export default User;
